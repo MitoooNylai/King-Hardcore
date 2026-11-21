@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Java 21
@@ -20,27 +20,23 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Extract source project
+      - name: Extract Source
         run: |
           mkdir -p source
-          unzip -q King-Hardcore-BossBar-Comet-source.zip -d source
+          unzip -q King-Hardcore-BossBar-Comet-Modified.zip -d source
 
-      - name: Find Maven project
+      - name: Locate pom.xml
         run: |
           POM=$(find source -name pom.xml -print -quit)
-
           if [ -z "$POM" ]; then
-            echo "ERROR: pom.xml tidak ditemukan!"
+            echo "pom.xml tidak ditemukan"
             find source -maxdepth 4 -type f
             exit 1
           fi
+          echo "POM=$POM" >> "$GITHUB_ENV"
 
-          PROJECT_DIR=$(dirname "$POM")
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Project ditemukan: $PROJECT_DIR"
-
-      - name: Build with Maven
-        run: mvn -B -f "$PROJECT_DIR/pom.xml" clean package
+      - name: Build Plugin
+        run: mvn -B -f "$POM" clean package
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
