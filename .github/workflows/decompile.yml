@@ -1,0 +1,48 @@
+
+name: Decompile King Hardcore
+
+on:
+  workflow_dispatch:
+
+jobs:
+  decompile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Download CFR
+        run: |
+          curl -L -o cfr.jar \
+          https://repo1.maven.org/maven2/org/benf/cfr/0.152/cfr-0.152.jar
+
+      - name: Decompile plugin
+        run: |
+          mkdir -p output
+          java -jar cfr.jar BZLDeathAnimation-1.0.0.jar \
+          --outputdir output/java
+
+      - name: Extract plugin resources
+        run: |
+          mkdir -p output/resources
+          unzip -o BZLDeathAnimation-1.0.0.jar \
+          'plugin.yml' 'config.yml' 'messages.yml' \
+          -d output/resources || true
+
+      - name: Package source
+        run: |
+          cd output
+          zip -qr ../King-Hardcore-Decompiled.zip .
+
+      - name: Upload source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: King-Hardcore-Decompiled
+          path: King-Hardcore-Decompiled.zip
