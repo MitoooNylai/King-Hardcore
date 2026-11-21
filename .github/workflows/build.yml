@@ -14,25 +14,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java 21
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
 
       - name: Extract source project
         run: |
-          mkdir source
+          mkdir -p source
           unzip -q King-Hardcore-BossBar-Comet-source.zip -d source
 
-      - name: Build with Maven
-        working-directory: source
-        run: mvn -B clean package
+      - name: Find Maven project
+        run: |
+          POM=$(find source -name pom.xml -print -quit)
 
-      - name: Upload JAR artifact
+          if [ -z "$POM" ]; then
+            echo "ERROR: pom.xml tidak ditemukan!"
+            find source -maxdepth 4 -type f
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$POM")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Project ditemukan: $PROJECT_DIR"
+
+      - name: Build with Maven
+        run: mvn -B -f "$PROJECT_DIR/pom.xml" clean package
+
+      - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: King-Hardcore
-          path: source/target/*.jar
+          path: source/**/target/*.jar
           if-no-files-found: error
